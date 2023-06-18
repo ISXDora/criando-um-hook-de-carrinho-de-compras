@@ -99,9 +99,39 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
     amount,
   }: UpdateProductAmount) => {
     try {
-      // TODO
-    } catch {
-      // TODO
+      const productExists = cart.find(product => product.id === productId)
+      const stock = await verifyStock(productId)
+
+      if(!productExists){
+        throw new Error('Erro na alteração de quantidade do produto')
+      }
+
+      if(amount <= 0){
+        throw new Error('Erro na alteração de quantidade do produto')
+      }
+
+      if(productExists && stock && productExists?.amount >= stock?.data.amount){
+        throw new Error('Quantidade solicitada fora de estoque')
+      }
+
+      const updateProducts = cart.map((product) => {
+        if(product.id === productId){
+          return {...product, amount: + amount}
+        }
+        return product
+      })
+
+      setCart(updateProducts)
+      localStorage.setItem('@RocketShoes:cart', JSON.stringify(updateProducts))
+
+      
+
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        toast.error('Erro na alteração de quantidade do produto');
+      }else if(error instanceof Error){
+        toast.error(error.message)
+      }
     }
   };
 
